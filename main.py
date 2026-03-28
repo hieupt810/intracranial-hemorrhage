@@ -87,7 +87,9 @@ def train(
         root_dir=data_dir, split="train", transforms=get_transforms(is_training=True)
     )
     val_dataset = BrainMRIDataset(
-        root_dir=data_dir, split="val", transforms=get_transforms(is_training=False)
+        root_dir=data_dir,
+        split="validation",
+        transforms=get_transforms(is_training=False),
     )
 
     # DataLoader

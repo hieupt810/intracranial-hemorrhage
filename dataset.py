@@ -35,6 +35,7 @@ class BrainMRIDataset(Dataset):
 
         image_volume = self._load_and_stack(img_dir)
         mask_volume = self._load_and_stack(mask_dir)
+        mask_volume = (mask_volume > 0).astype(np.float32)
 
         # Add channel dimension: Shape becomes (C, D, H, W)
         image_volume = np.expand_dims(image_volume, axis=0)

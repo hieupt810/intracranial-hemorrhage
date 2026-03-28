@@ -202,7 +202,7 @@ def setup_args():
         "--data_dir", type=str, required=True, help="Path to the dataset directory."
     )
     parser.add_argument(
-        "--batch_size", type=int, default=8, help="Batch size for training."
+        "--batch_size", type=int, default=4, help="Batch size for training."
     )
     parser.add_argument(
         "--epochs", type=int, default=100, help="Number of training epochs."

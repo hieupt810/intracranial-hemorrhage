@@ -18,7 +18,7 @@ from torch.utils.data import DataLoader
 
 from criterion import FocalDiceLoss
 from dataset import BrainMRIDataset
-from helpers import setup_logging
+from helpers import seed_everything, setup_logging
 
 setup_logging()
 
@@ -66,6 +66,7 @@ def train(
     lr: float = 1e-4,
     patience: int = 5,
     num_workers: int = 1,
+    seed: int = 42,
 ):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -76,6 +77,10 @@ def train(
     logging.info(f"Learning rate: {lr}")
     logging.info(f"Patience: {patience}")
     logging.info(f"Number of workers: {num_workers}")
+    logging.info(f"Random seed: {seed}")
+
+    # Seed for reproducibility
+    seed_everything(seed)
 
     # Instantiate datasets
     train_dataset = BrainMRIDataset(
@@ -214,6 +219,13 @@ def setup_args():
         default=1,
         help="Number of worker threads.",
     )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Random seed for reproducibility.",
+    )
+    return parser.parse_args()
 
 
 def main():
@@ -225,4 +237,5 @@ def main():
         lr=args.lr,
         patience=args.patience,
         num_workers=args.num_workers,
+        seed=args.seed,
     )

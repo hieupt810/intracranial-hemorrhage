@@ -70,15 +70,6 @@ def train(
 ):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    logging.info(f"Using device: {device}")
-    logging.info(f"Data directory: {data_dir}")
-    logging.info(f"Batch size: {batch_size}")
-    logging.info(f"Epochs: {epochs}")
-    logging.info(f"Learning rate: {lr}")
-    logging.info(f"Patience: {patience}")
-    logging.info(f"Number of workers: {num_workers}")
-    logging.info(f"Random seed: {seed}")
-
     # Seed for reproducibility
     seed_everything(seed)
 
@@ -203,7 +194,7 @@ def setup_args():
         "--data_dir", type=str, required=True, help="Path to the dataset directory."
     )
     parser.add_argument(
-        "--batch_size", type=int, default=4, help="Batch size for training."
+        "--batch_size", type=int, default=8, help="Batch size for training."
     )
     parser.add_argument(
         "--epochs", type=int, default=100, help="Number of training epochs."

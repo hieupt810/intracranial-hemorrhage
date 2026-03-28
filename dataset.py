@@ -45,4 +45,4 @@ class BrainMRIDataset(Dataset):
         if self.transforms:
             data = self.transforms(data)
 
-        return data
+        return data["image"], data["mask"]

@@ -7,6 +7,7 @@ import segmentation_models_pytorch_3d as smp
 import torch
 from monai.transforms import (
     Compose,
+    DivisiblePadd,
     NormalizeIntensityd,
     RandFlipd,
     RandRotated,
@@ -53,6 +54,7 @@ def get_transforms(is_training: bool = True):
     transforms.extend(
         [
             NormalizeIntensityd(keys=["image"], nonzero=True),
+            DivisiblePadd(keys=["image", "mask"], k=32),
             ToTensord(keys=["image", "mask"]),
         ]
     )
@@ -89,15 +91,21 @@ def train(
         batch_size=batch_size,
         shuffle=True,
         num_workers=num_workers,
-        pin_memory=True,
+        pin_memory=True if device.type == "cuda" else False,
     )
     val_loader = DataLoader(
         val_dataset,
         batch_size=batch_size,
         shuffle=False,
         num_workers=num_workers,
-        pin_memory=True,
+        pin_memory=True if device.type == "cuda" else False,
     )
+
+    # Verify the shapes
+    for image, mask in train_loader:
+        logging.info(f"Image shape: {image.shape}")
+        logging.info(f"Mask shape: {mask.shape}")
+        break
 
     # Model, loss, optimizer, scheduler
     model = smp.UnetPlusPlus(encoder_name="resnet101", in_channels=1, classes=1).to(

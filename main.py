@@ -239,3 +239,7 @@ def main():
         num_workers=args.num_workers,
         seed=args.seed,
     )
+
+
+if __name__ == "__main__":
+    main()

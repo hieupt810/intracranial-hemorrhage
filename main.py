@@ -69,6 +69,14 @@ def train(
 ):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+    logging.info(f"Using device: {device}")
+    logging.info(f"Data directory: {data_dir}")
+    logging.info(f"Batch size: {batch_size}")
+    logging.info(f"Epochs: {epochs}")
+    logging.info(f"Learning rate: {lr}")
+    logging.info(f"Patience: {patience}")
+    logging.info(f"Number of workers: {num_workers}")
+
     # Instantiate datasets
     train_dataset = BrainMRIDataset(
         root_dir=data_dir, split="train", transforms=get_transforms(is_training=True)
@@ -100,7 +108,7 @@ def train(
     criterion = FocalDiceLoss()
     optimizer = optim.Adam(model.parameters(), lr=lr)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode="min", factor=0.5, patience=patience
+        optimizer, mode="min", factor=0.5, patience=patience, min_lr=1e-6
     )
 
     # Scaler for mixed precision training

@@ -65,8 +65,8 @@ def train(
     data_dir: Union[str, Path],
     batch_size: int,
     epochs: int,
-    lr: float = 1e-4,
-    patience: int = 5,
+    lr: float = 1e-3,
+    patience: int = 10,
     num_workers: int = 1,
     seed: int = 42,
 ):
@@ -114,7 +114,7 @@ def train(
     criterion = FocalDiceLoss()
     optimizer = optim.Adam(model.parameters(), lr=lr)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode="min", factor=0.5, patience=patience, min_lr=1e-6
+        optimizer, mode="min", factor=0.5, patience=patience // 2, min_lr=1e-6
     )
 
     # Scaler for mixed precision training
@@ -188,7 +188,7 @@ def train(
             logging.info(f"\tNo improvement. Patience: {patience_counter}/{patience}")
 
             if patience_counter >= patience:
-                logging.warning(f"\tEarly stopping triggered after {epoch + 1} epochs.")
+                logging.warning(f"Early stopping triggered after {epoch + 1} epochs.")
                 break
 
     logging.info("Training complete.")
@@ -211,7 +211,7 @@ def setup_args():
     parser.add_argument(
         "--patience",
         type=int,
-        default=5,
+        default=10,
         help="Patience for learning rate scheduler and early stopping.",
     )
     parser.add_argument(

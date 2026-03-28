@@ -1,0 +1,23 @@
+#!/bin/bash
+#SBATCH --job-name=intracranial-hemorrhage-segmentation
+#SBATCH --partition=amperenodes
+#SBATCH --gres=gpu:1
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=32G
+#SBATCH --time=03:00:00
+#SBATCH --output=log.out
+#SBATCH --error=err.err
+
+### Loading the required CUDA and cuDNN modules
+module reset
+module load Anaconda3
+module load GCC/14.2.0
+module load CUDA/11.8.0 cuda11.8/toolkit cuDNN/8.9.2.26-CUDA-11.8.0
+
+### Activate the conda environment
+conda activate research
+
+### Running the Python script
+python preprocess.py --raw_data_dir ./computed-tomography-images-for-intracranial-hemorrhage-detection-and-segmentation-1.0.0/Patients_CT --overwrite
+python main.py --data_dir ./processed_dataset

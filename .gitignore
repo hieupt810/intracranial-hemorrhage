@@ -1,0 +1,7 @@
+__pycache__/
+Patients_CT/
+processed_dataset/
+venv/
+
+.DS_Store
+Thumbs.db

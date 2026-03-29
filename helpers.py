@@ -51,6 +51,7 @@ def seed_everything(seed: int):
 def get_transforms(is_training: bool = True):
     from monai.transforms import (
         Compose,
+        DivisiblePadd,
         EnsureChannelFirstd,
         RandCropByPosNegLabeld,
         RandFlipd,
@@ -64,6 +65,7 @@ def get_transforms(is_training: bool = True):
         ScaleIntensityRangePercentilesd(
             keys=["image"], lower=1, upper=99, b_min=0.0, b_max=1.0, clip=True
         ),
+        DivisiblePadd(keys=["image", "mask"], k=16),
     ]
 
     if is_training:

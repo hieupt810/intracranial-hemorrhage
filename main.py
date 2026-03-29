@@ -5,60 +5,14 @@ from typing import Union
 
 import segmentation_models_pytorch_3d as smp
 import torch
-from monai.transforms import (
-    Compose,
-    DivisiblePadd,
-    NormalizeIntensityd,
-    RandFlipd,
-    RandRotated,
-    RandZoomd,
-    ToTensord,
-)
 from torch import amp, optim
 from torch.utils.data import DataLoader
 
 from criterion import FocalDiceLoss
 from dataset import BrainMRIDataset
-from helpers import seed_everything, setup_logging
+from helpers import get_transforms, seed_everything, setup_logging
 
 setup_logging()
-
-
-def get_transforms(is_training: bool = True):
-    transforms = []
-    if is_training:
-        transforms.extend(
-            [
-                # Randomly flip along the depth, height, or width axes
-                RandFlipd(keys=["image", "mask"], spatial_axis=[0, 1, 2], prob=0.5),
-                # Random slight rotations in 3D space
-                RandRotated(
-                    keys=["image", "mask"],
-                    range_x=0.2,
-                    range_y=0.2,
-                    range_z=0.2,
-                    prob=0.4,
-                    mode=("bilinear", "nearest"),
-                ),
-                # Random zoom (scaling)
-                RandZoomd(
-                    keys=["image", "mask"],
-                    prob=0.3,
-                    min_zoom=0.9,
-                    max_zoom=1.1,
-                    mode=("bilinear", "nearest"),
-                ),
-            ]
-        )
-
-    transforms.extend(
-        [
-            NormalizeIntensityd(keys=["image"], nonzero=True),
-            DivisiblePadd(keys=["image", "mask"], k=32),
-            ToTensord(keys=["image", "mask"]),
-        ]
-    )
-    return Compose(transforms)
 
 
 def train(

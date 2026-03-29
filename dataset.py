@@ -19,11 +19,7 @@ class BrainMRIDataset(Dataset):
 
     def _load_and_stack(self, dir: Union[str, Path]):
         paths = sorted(Path(dir).glob("*.png"))
-
-        # Read each image as grayscale and convert to numpy array
         slices = [np.array(Image.open(p).convert("L"), dtype=np.float32) for p in paths]
-
-        # Stack into 3D volume (D, H, W)
         volume = np.stack(slices, axis=0)
         return volume
 
@@ -37,13 +33,9 @@ class BrainMRIDataset(Dataset):
         mask_volume = self._load_and_stack(mask_dir)
         mask_volume = (mask_volume > 0).astype(np.float32)
 
-        # Add channel dimension: Shape becomes (C, D, H, W)
-        image_volume = np.expand_dims(image_volume, axis=0)
-        mask_volume = np.expand_dims(mask_volume, axis=0)
-
-        # Create dictionary for MONAI transforms
         data = {"image": image_volume, "mask": mask_volume}
+
         if self.transforms:
             data = self.transforms(data)
 
-        return data["image"], data["mask"]
+        return data

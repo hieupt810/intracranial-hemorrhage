@@ -1,4 +1,3 @@
-import argparse
 import logging
 import random
 import shutil
@@ -197,46 +196,4 @@ def process_dataset(
         len(train_dirs),
         len(validation_dirs),
         len(test_dirs),
-    )
-
-
-def setup_args():
-    parser = argparse.ArgumentParser(
-        description="Preprocess intracranial hemorrhage dataset."
-    )
-    parser.add_argument(
-        "--raw_data_dir", type=str, required=True, help="Path to raw data."
-    )
-    parser.add_argument(
-        "--processed_data_dir",
-        type=str,
-        default="processed_dataset",
-        help="Output path.",
-    )
-    parser.add_argument(
-        "--target_count", type=int, default=19, help="Images per patient."
-    )
-    parser.add_argument("--validation_ratio", type=float, default=0.15)
-    parser.add_argument("--test_ratio", type=float, default=0.15)
-    parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument(
-        "--overwrite", action="store_true", help="Overwrite output dir if it exists."
-    )
-    parser.add_argument(
-        "--workers", type=int, default=4, help="Number of parallel workers."
-    )
-    return parser.parse_args()
-
-
-if __name__ == "__main__":
-    args = setup_args()
-    process_dataset(
-        raw_data_dir=args.raw_data_dir,
-        processed_data_dir=args.processed_data_dir,
-        validation_ratio=args.validation_ratio,
-        test_ratio=args.test_ratio,
-        target_count=args.target_count,
-        seed=args.seed,
-        overwrite=args.overwrite,
-        workers=args.workers,
     )

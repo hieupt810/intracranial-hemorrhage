@@ -1,3 +1,23 @@
+def setup_args():
+    from argparse import ArgumentParser
+
+    parser = ArgumentParser()
+
+    parser.add_argument("--raw_data_dir", type=str, required=True)
+    parser.add_argument("--processed_data_dir", type=str, default="processed_dataset")
+    parser.add_argument("--validation_ratio", type=float, default=0.15)
+    parser.add_argument("--test_ratio", type=float, default=0.15)
+    parser.add_argument("--target_count", type=int, default=19)
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--overwrite", type=bool, default=True)
+    parser.add_argument("--workers", type=int, default=4)
+    parser.add_argument("--batch_size", type=int, default=4)
+    parser.add_argument("--epochs", type=int, default=100)
+    parser.add_argument("--lr", type=float, default=0.001)
+
+    return parser.parse_args()
+
+
 def setup_logging():
     """Set up logging configuration."""
     import logging
@@ -31,45 +51,38 @@ def seed_everything(seed: int):
 def get_transforms(is_training: bool = True):
     from monai.transforms import (
         Compose,
-        DivisiblePadd,
-        NormalizeIntensityd,
+        EnsureChannelFirstd,
+        RandCropByPosNegLabeld,
         RandFlipd,
-        RandRotated,
-        RandZoomd,
+        RandRotate90d,
+        ScaleIntensityRangePercentilesd,
         ToTensord,
     )
 
-    transforms = []
+    transforms = [
+        EnsureChannelFirstd(keys=["image", "mask"], channel_dim="no_channel"),
+        ScaleIntensityRangePercentilesd(
+            keys=["image"], lower=1, upper=99, b_min=0.0, b_max=1.0, clip=True
+        ),
+    ]
+
     if is_training:
         transforms.extend(
             [
-                # Randomly flip along the depth, height, or width axes
-                RandFlipd(keys=["image", "mask"], spatial_axis=[0, 1, 2], prob=0.5),
-                # Random slight rotations in 3D space
-                RandRotated(
+                RandCropByPosNegLabeld(
                     keys=["image", "mask"],
-                    range_x=0.2,
-                    range_y=0.2,
-                    range_z=0.2,
-                    prob=0.4,
-                    mode=("bilinear", "nearest"),
+                    label_key="mask",
+                    spatial_size=(16, 128, 128),
+                    pos=1,
+                    neg=1,
+                    num_samples=4,
+                    image_key="image",
+                    image_threshold=0,
                 ),
-                # Random zoom (scaling)
-                RandZoomd(
-                    keys=["image", "mask"],
-                    prob=0.3,
-                    min_zoom=0.9,
-                    max_zoom=1.1,
-                    mode=("bilinear", "nearest"),
-                ),
+                RandFlipd(keys=["image", "mask"], spatial_axis=[1, 2], prob=0.5),
+                RandRotate90d(keys=["image", "mask"], prob=0.5, spatial_axes=[1, 2]),
             ]
         )
 
-    transforms.extend(
-        [
-            NormalizeIntensityd(keys=["image"], nonzero=True),
-            DivisiblePadd(keys=["image", "mask"], k=32),
-            ToTensord(keys=["image", "mask"]),
-        ]
-    )
+    transforms.append(ToTensord(keys=["image", "mask"]))
     return Compose(transforms)

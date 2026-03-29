@@ -3,6 +3,7 @@ Patients_CT/
 processed_dataset/
 test_plots/
 venv/
+.venv/
 
 .DS_Store
 Thumbs.db

@@ -1,5 +1,6 @@
+from dataset import BrainMRIDataset
 from evaluate import plot_and_save_results
-from helpers import setup_args
+from helpers import get_transforms, setup_args
 from preprocess import process_dataset
 from train import train
 
@@ -24,8 +25,25 @@ def main():
         num_workers=args.workers,
         seed=args.seed,
     )
+    validation_dataset = BrainMRIDataset(
+        root_dir=args.data_dir,
+        split="validation",
+        transforms=get_transforms(is_training=False),
+    )
     plot_and_save_results(
-        data_dir=args.processed_data_dir,
+        dataset=validation_dataset,
+        model_path="best_model.pth",
+        output_dir="./validation_plots",
+        batch_size=args.batch_size,
+        num_workers=args.workers,
+    )
+    test_dataset = BrainMRIDataset(
+        root_dir=args.data_dir,
+        split="test",
+        transforms=get_transforms(is_training=False),
+    )
+    plot_and_save_results(
+        dataset=test_dataset,
         model_path="best_model.pth",
         output_dir="./test_plots",
         batch_size=args.batch_size,

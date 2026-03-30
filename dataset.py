@@ -10,17 +10,14 @@ class BrainMRIDataset(Dataset):
     def __init__(
         self,
         root_dir: Union[str, Path] = None,
-        split: str = "train",
         transforms=None,
         patient_dirs: list = None,
     ):
         if patient_dirs is not None:
             self.patient_dirs = [Path(d) for d in patient_dirs]
         else:
-            self.dir = Path(root_dir) / split
-            self.patient_dirs = sorted(
-                [d for d in self.dir.iterdir() if d.is_dir()]
-            )
+            self.dir = Path(root_dir)
+            self.patient_dirs = sorted([d for d in self.dir.iterdir() if d.is_dir()])
         self.transforms = transforms
 
     def __len__(self):

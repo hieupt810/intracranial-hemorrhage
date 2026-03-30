@@ -31,9 +31,7 @@ def main():
 
     # Step 3: Evaluate best model on the full dataset with sliding window
     full_dataset = BrainMRIDataset(
-        root_dir=args.processed_data_dir,
-        split="all",
-        transforms=get_transforms(is_training=False),
+        root_dir=args.processed_data_dir, transforms=get_transforms(is_training=False)
     )
     metrics = evaluate_model_metrics(
         dataset=full_dataset,

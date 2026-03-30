@@ -185,11 +185,7 @@ def kfold_train(
     seed_everything(seed)
 
     # Load the full dataset (all patients in one directory)
-    full_dataset = BrainMRIDataset(
-        root_dir=data_dir,
-        split="all",
-        transforms=None,  # transforms applied per-fold below
-    )
+    full_dataset = BrainMRIDataset(root_dir=data_dir, transforms=None)
 
     n_patients = len(full_dataset)
     logging.info(f"Starting {n_folds}-Fold CV on {n_patients} patients on {device}")
@@ -209,14 +205,10 @@ def kfold_train(
 
         # Create per-fold datasets with appropriate transforms
         train_dataset = BrainMRIDataset(
-            root_dir=data_dir,
-            split="all",
-            transforms=get_transforms(is_training=True),
+            root_dir=data_dir, transforms=get_transforms(is_training=True)
         )
         val_dataset = BrainMRIDataset(
-            root_dir=data_dir,
-            split="all",
-            transforms=get_transforms(is_training=False),
+            root_dir=data_dir, transforms=get_transforms(is_training=False)
         )
 
         train_subset = Subset(train_dataset, train_indices.tolist())

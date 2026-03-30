@@ -8,13 +8,7 @@ from monai.networks.nets import UNet
 from torch.utils.data import DataLoader
 
 
-def plot_and_save_results(
-    dataset,
-    model_path,
-    output_dir,
-    batch_size=1,
-    num_workers=1,
-):
+def plot_and_save_results(dataset, model_path, output_dir, batch_size=1, num_workers=1):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
@@ -53,8 +47,6 @@ def plot_and_save_results(
 
     model.eval()
 
-    # We use sliding window inferer because the test volumes might not have spatial dimensions
-    # perfectly divisible by 16 (which UNet requires based on the strides).
     inferer = SlidingWindowInferer(
         roi_size=(16, 128, 128), sw_batch_size=4, overlap=0.25
     )
@@ -77,11 +69,10 @@ def plot_and_save_results(
                 preds = preds.cpu().numpy()
 
                 for i in range(inputs.shape[0]):
-                    img = inputs[i, 0]  # shape: (D, H, W)
-                    gt = masks[i, 0]  # shape: (D, H, W)
-                    pr = preds[i, 0]  # shape: (D, H, W)
+                    img = inputs[i, 0]
+                    gt = masks[i, 0]
+                    pr = preds[i, 0]
 
-                    # Get the middle slice along the depth dimension (D)
                     mid_idx = img.shape[0] // 2
 
                     img_slice = img[mid_idx]

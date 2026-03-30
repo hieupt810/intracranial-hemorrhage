@@ -20,8 +20,7 @@ def plot_and_save_results(
     output_path.mkdir(parents=True, exist_ok=True)
 
     # Dataset and DataLoader
-
-    if len(test_dataset) == 0:
+    if len(dataset) == 0:
         logging.warning("Test dataset is empty. Cannot evaluate.")
         return
 

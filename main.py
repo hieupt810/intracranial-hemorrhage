@@ -26,7 +26,7 @@ def main():
         seed=args.seed,
     )
     validation_dataset = BrainMRIDataset(
-        root_dir=args.data_dir,
+        root_dir=args.processed_data_dir,
         split="validation",
         transforms=get_transforms(is_training=False),
     )
@@ -38,7 +38,7 @@ def main():
         num_workers=args.workers,
     )
     test_dataset = BrainMRIDataset(
-        root_dir=args.data_dir,
+        root_dir=args.processed_data_dir,
         split="test",
         transforms=get_transforms(is_training=False),
     )

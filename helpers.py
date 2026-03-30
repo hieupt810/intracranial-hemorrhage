@@ -5,8 +5,7 @@ def setup_args():
 
     parser.add_argument("--raw_data_dir", type=str, required=True)
     parser.add_argument("--processed_data_dir", type=str, default="processed_dataset")
-    parser.add_argument("--validation_ratio", type=float, default=0.1)
-    parser.add_argument("--test_ratio", type=float, default=0.2)
+    parser.add_argument("--n_folds", type=int, default=5)
     parser.add_argument("--target_count", type=int, default=19)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--overwrite", type=bool, default=True)

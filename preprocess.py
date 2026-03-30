@@ -1,5 +1,4 @@
 import logging
-import random
 import shutil
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from functools import partial
@@ -126,15 +125,13 @@ def process_patient_wrapper(
     process_patient_data(patient_dir, processed_dir, target_count=target_count)
 
 
-def process_dataset(
+def process_kfold_dataset(
     raw_data_dir: Union[str, Path],
     processed_data_dir: Union[str, Path],
-    validation_ratio: float = 0.15,
-    test_ratio: float = 0.15,
-    target_count: int = 15,
-    seed: int = 42,
-    overwrite: bool = False,
-    workers: int = 4,
+    target_count: int,
+    seed: int,
+    overwrite: bool,
+    workers: int,
 ):
     raw_data_dir = Path(raw_data_dir)
     if not raw_data_dir.exists():
@@ -172,28 +169,14 @@ def process_dataset(
     logging.info("Found %d patient directories.", num_patients)
 
     seed_everything(seed)
-    random.shuffle(patient_dirs)
-
-    # Calculate splits safely
-    validation_size = int(num_patients * validation_ratio)
-    test_size = int(num_patients * test_ratio)
-    train_size = num_patients - validation_size - test_size
-
-    train_dirs = patient_dirs[:train_size]
-    validation_dirs = patient_dirs[train_size : train_size + validation_size]
-    test_dirs = patient_dirs[train_size + validation_size :]
-
-    logging.info("Starting processing. Using %d parallel workers...", workers)
-
-    process_patients(train_dirs, processed_data_dir / "train", target_count, workers)
-    process_patients(
-        validation_dirs, processed_data_dir / "validation", target_count, workers
-    )
-    process_patients(test_dirs, processed_data_dir / "test", target_count, workers)
 
     logging.info(
-        "Dataset processing complete. Train: %d, Validation: %d, Test: %d",
-        len(train_dirs),
-        len(validation_dirs),
-        len(test_dirs),
+        "Processing all %d patients into '%s' for K-Fold CV. Using %d workers...",
+        num_patients,
+        processed_data_dir,
+        workers,
     )
+
+    process_patients(patient_dirs, processed_data_dir, target_count, workers)
+
+    logging.info("K-Fold dataset processing complete. Total patients: %d", num_patients)

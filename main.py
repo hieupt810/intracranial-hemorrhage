@@ -1,51 +1,55 @@
 from dataset import BrainMRIDataset
-from evaluate import plot_and_save_results
+from evaluate import evaluate_model_metrics, plot_and_save_results
 from helpers import get_transforms, setup_args
-from preprocess import process_dataset
-from train import train
+from kfold_train import kfold_train
+from preprocess import process_kfold_dataset
 
 
 def main():
     args = setup_args()
-    process_dataset(
+
+    # Step 1: Preprocess all patients into a single directory for K-Fold
+    process_kfold_dataset(
         raw_data_dir=args.raw_data_dir,
         processed_data_dir=args.processed_data_dir,
-        validation_ratio=args.validation_ratio,
-        test_ratio=args.test_ratio,
         target_count=args.target_count,
         seed=args.seed,
         overwrite=args.overwrite,
         workers=args.workers,
     )
-    train(
+
+    # Step 2: K-Fold cross-validation — trains K models, selects the best
+    best_model_path = kfold_train(
         data_dir=args.processed_data_dir,
+        n_folds=args.n_folds,
         batch_size=args.batch_size,
         epochs=args.epochs,
         lr=args.lr,
         num_workers=args.workers,
         seed=args.seed,
     )
-    validation_dataset = BrainMRIDataset(
+
+    # Step 3: Evaluate best model on the full dataset with sliding window
+    full_dataset = BrainMRIDataset(
         root_dir=args.processed_data_dir,
-        split="validation",
+        split="all",
         transforms=get_transforms(is_training=False),
     )
-    plot_and_save_results(
-        dataset=validation_dataset,
-        model_path="best_model.pth",
-        output_dir="./validation_plots",
+    metrics = evaluate_model_metrics(
+        dataset=full_dataset,
+        model_path=best_model_path,
         batch_size=args.batch_size,
         num_workers=args.workers,
     )
-    test_dataset = BrainMRIDataset(
-        root_dir=args.processed_data_dir,
-        split="test",
-        transforms=get_transforms(is_training=False),
-    )
+    print("\n=== Best Model Performance (Full Dataset) ===")
+    for metric_name, value in metrics.items():
+        print(f"  {metric_name}: {value:.4f}")
+
+    # Step 4: Generate visualization plots
     plot_and_save_results(
-        dataset=test_dataset,
-        model_path="best_model.pth",
-        output_dir="./test_plots",
+        dataset=full_dataset,
+        model_path=best_model_path,
+        output_dir="./evaluation_plots",
         batch_size=args.batch_size,
         num_workers=args.workers,
     )

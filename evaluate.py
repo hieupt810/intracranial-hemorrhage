@@ -106,3 +106,89 @@ def plot_and_save_results(dataset, model_path, output_dir, batch_size=1, num_wor
                     plt.close(fig)
 
     logging.info(f"Evaluation complete. Extracted plots saved in {output_path}")
+
+
+def evaluate_model_metrics(dataset, model_path, batch_size=1, num_workers=1):
+    """Evaluate a model on a dataset and return comprehensive metrics.
+
+    Returns:
+        Dictionary with mean Dice, IoU, Precision, Recall, Hausdorff95.
+    """
+    from metrics import compute_metrics
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    if len(dataset) == 0:
+        logging.warning("Dataset is empty. Cannot evaluate.")
+        return {}
+
+    loader = DataLoader(
+        dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+    )
+
+    model = UNet(
+        spatial_dims=3,
+        in_channels=1,
+        out_channels=2,
+        channels=(16, 32, 64, 128, 256),
+        strides=(2, 2, 2, 2),
+        num_res_units=2,
+    ).to(device)
+
+    if Path(model_path).exists():
+        model.load_state_dict(
+            torch.load(model_path, map_location=device, weights_only=True)
+        )
+        logging.info(f"Loaded model weights from {model_path}")
+    else:
+        logging.warning(f"Model weights not found at {model_path}.")
+        return {}
+
+    model.eval()
+
+    inferer = SlidingWindowInferer(
+        roi_size=(16, 128, 128), sw_batch_size=4, overlap=0.25
+    )
+
+    all_metrics = {"dice": 0.0, "iou": 0.0, "precision": 0.0, "recall": 0.0, "hausdorff95": 0.0}
+    n_batches = 0
+
+    logging.info("Computing metrics...")
+    with torch.no_grad():
+        with torch.autocast(device_type=device.type, enabled=(device.type == "cuda")):
+            for batch_data in loader:
+                inputs, masks = (
+                    batch_data["image"].to(device),
+                    batch_data["mask"].to(device),
+                )
+
+                outputs = inferer(inputs, model)
+
+                # Convert predictions to one-hot
+                preds_argmax = torch.argmax(outputs, dim=1, keepdim=True)
+                preds_onehot = torch.zeros_like(outputs)
+                preds_onehot.scatter_(1, preds_argmax, 1)
+
+                # Convert targets to one-hot
+                targets_onehot = torch.zeros_like(outputs)
+                targets_onehot.scatter_(1, masks.long(), 1)
+
+                batch_metrics = compute_metrics(preds_onehot, targets_onehot)
+                for k in all_metrics:
+                    all_metrics[k] += batch_metrics[k]
+                n_batches += 1
+
+    for k in all_metrics:
+        all_metrics[k] /= max(n_batches, 1)
+
+    logging.info(
+        f"Final Metrics: "
+        f"Dice={all_metrics['dice']:.4f} | IoU={all_metrics['iou']:.4f} | "
+        f"Precision={all_metrics['precision']:.4f} | Recall={all_metrics['recall']:.4f} | "
+        f"Hausdorff95={all_metrics['hausdorff95']:.4f}"
+    )
+
+    return all_metrics
